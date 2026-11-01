@@ -3,185 +3,473 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>График любви</title>
+  <title>Сюрприз</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
     body {
-      background: #0f172a;
-      color: #f8fafc;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #090d16;
       min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Контейнер для фоновых маленьких сердечек */
+    #miniHeartsContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Маленькое сердце */
+    .mini-heart {
+      position: absolute;
+      transform-origin: center center;
+      opacity: 0;
+      transform: scale(0);
+      transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 0 10px rgba(244, 63, 94, 0.7));
+    }
+
+    .mini-heart.show {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+
+    .mini-heart svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      fill: url(#heartGradient);
+    }
+
+    /* Обертка главного сердца и надписи */
+    .heart-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center center;
+      z-index: 5;
+    }
+
+    canvas {
+      display: block;
+      background: transparent;
+    }
+
+    /* Неоновая надпись */
+    .heart-text {
+      position: absolute;
+      top: 47%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Caveat', 'Segoe Script', cursive, sans-serif;
+      font-size: clamp(23px, 5.2vw, 33px);
+      line-height: 1.3;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #ffe4e6;
+      text-shadow: 
+        0 0 10px rgba(244, 63, 94, 0.9),
+        0 0 25px rgba(244, 63, 94, 0.65),
+        0 0 45px rgba(244, 63, 94, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 1.8s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      gap: 2px;
+      white-space: nowrap;
     }
 
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      position: relative;
+    .heart-text.visible {
+      opacity: 1;
     }
 
-    /* Холст с графиком */
-    canvas {
-      background: #1e293b;
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-      transform-origin: center center;
-    }
-
-    /* Анимация пульсации после завершения рисования */
+    /* Ритмичная пульсация сердца */
     .pulsing {
-      animation: heartbeat 1.25s infinite ease-in-out;
+      animation: heartbeat 1.35s infinite ease-in-out;
     }
 
     @keyframes heartbeat {
-      0%   { transform: scale(1); }
-      14%  { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(244, 63, 94, 0.6)); }
-      28%  { transform: scale(1); }
-      42%  { transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.4)); }
-      70%  { transform: scale(1); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+      0% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.45));
+      }
+      14% {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 32px rgba(244, 63, 94, 0.95));
+      }
+      28% {
+        transform: scale(0.98);
+        filter: drop-shadow(0 0 16px rgba(244, 63, 94, 0.5));
+      }
+      42% {
+        transform: scale(1.06);
+        filter: drop-shadow(0 0 24px rgba(244, 63, 94, 0.8));
+      }
+      70% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.45));
+      }
+      100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 12px rgba(244, 63, 94, 0.45));
+      }
     }
 
-    /* Кнопка запуска */
-    button {
-      padding: 14px 32px;
-      font-size: 16px;
+    /* Плавный полёт вверх с покачиванием, как у воздушных шариков */
+    .balloon-rise {
+      animation: balloonFloat var(--float-dur, 5.5s) ease-in forwards !important;
+      will-change: transform, opacity;
+    }
+
+    @keyframes balloonFloat {
+      0% {
+        transform: translate(0, 0) rotate(0deg) scale(var(--init-scale, 1));
+        opacity: var(--init-opacity, 0.95);
+      }
+      25% {
+        transform: translate(var(--sway-x1, 18px), -35vh) rotate(var(--tilt-1, 6deg)) scale(calc(var(--init-scale, 1) * 0.98));
+      }
+      50% {
+        transform: translate(var(--sway-x2, -22px), -75vh) rotate(var(--tilt-2, -5deg)) scale(calc(var(--init-scale, 1) * 0.95));
+      }
+      75% {
+        transform: translate(var(--sway-x3, 15px), -115vh) rotate(var(--tilt-3, 4deg)) scale(calc(var(--init-scale, 1) * 0.9));
+        opacity: 0.8;
+      }
+      100% {
+        transform: translate(var(--sway-x4, -10px), -160vh) rotate(var(--tilt-4, -3deg)) scale(calc(var(--init-scale, 1) * 0.85));
+        opacity: 0;
+      }
+    }
+
+    /* Кнопки взаимодействия */
+    .btn {
+      position: absolute;
+      padding: 16px 42px;
+      font-size: 19px;
       font-weight: 600;
-      color: #fff;
+      letter-spacing: 0.5px;
+      color: #ffffff;
       background: linear-gradient(135deg, #e11d48, #f43f5e);
       border: none;
       border-radius: 9999px;
       cursor: pointer;
-      box-shadow: 0 10px 25px rgba(244, 63, 94, 0.4);
-      transition: all 0.25s ease;
+      box-shadow: 0 10px 28px rgba(244, 63, 94, 0.45);
+      transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 14px 28px rgba(244, 63, 94, 0.5);
+    .btn:hover {
+      transform: scale(1.06);
+      box-shadow: 0 14px 34px rgba(244, 63, 94, 0.65);
     }
 
-    button:disabled {
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn.hidden {
       opacity: 0;
       pointer-events: none;
-      transform: scale(0.9);
+      transform: scale(0.85);
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <canvas id="plot" width="400" height="400"></canvas>
-    <button id="startBtn">Построить функцию</button>
+  <!-- Определение градиента для маленьких сердечек -->
+  <svg width="0" height="0" style="position: absolute;">
+    <defs>
+      <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#fb7185" />
+        <stop offset="100%" stop-color="#e11d48" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="stage">
+    <!-- Фоновые мелкие сердечки -->
+    <div id="miniHeartsContainer"></div>
+
+    <!-- Основное сердце и текст -->
+    <div class="heart-wrapper" id="heartWrapper">
+      <canvas id="heartCanvas"></canvas>
+      <div id="heartText" class="heart-text">
+        <div>От Никитки</div>
+        <div>с любовью — Саше</div>
+      </div>
+    </div>
+
+    <!-- Кнопки сценария -->
+    <button id="startBtn" class="btn">Открыть сюрприз?</button>
+    <button id="replayBtn" class="btn hidden">Ещё раз?</button>
   </div>
 
   <script>
-    const canvas = document.getElementById('plot');
+    const canvas = document.getElementById('heartCanvas');
+    const heartWrapper = document.getElementById('heartWrapper');
+    const heartText = document.getElementById('heartText');
+    const miniContainer = document.getElementById('miniHeartsContainer');
+    const startBtn = document.getElementById('startBtn');
+    const replayBtn = document.getElementById('replayBtn');
     const ctx = canvas.getContext('2d');
-    const btn = document.getElementById('startBtn');
 
-    const width = canvas.width;
-    const height = canvas.height;
-    const centerX = width / 2;
-    const centerY = height / 2 - 10;
-    const scale = 9; // Масштаб отображения
+    let animId = null;
+    let size = 0;
+    let scale = 0;
+    let timeouts = [];
 
-    // Параметрические уравнения сердца
+    function registerTimeout(fn, delay) {
+      const id = setTimeout(fn, delay);
+      timeouts.push(id);
+      return id;
+    }
+
+    function clearAllTimeouts() {
+      timeouts.forEach(id => clearTimeout(id));
+      timeouts = [];
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+    }
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      const minDimension = Math.min(window.innerWidth, window.innerHeight);
+      
+      size = Math.min(minDimension * 0.85, 480);
+      canvas.style.width = size + 'px';
+      canvas.style.height = size + 'px';
+      
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      
+      scale = size / 38;
+    }
+
     function getHeartPoint(t) {
       const x = 16 * Math.pow(Math.sin(t), 3);
       const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      
+      const centerX = size / 2;
+      const centerY = size / 2 - (scale * 1.5);
+      
       return {
-        // В canvas ось Y направлена вниз, поэтому инвертируем знак
-        px: centerX + x * scale,
-        py: centerY - y * scale
+        x: centerX + x * scale,
+        y: centerY - y * scale
       };
     }
 
-    // Отрисовка координатной сетки и осей
-    function drawGrid() {
-      ctx.clearRect(0, 0, width, height);
+    // Создание россыпи маленьких пульсирующих сердечек
+    function spawnMiniHearts() {
+      miniContainer.innerHTML = '';
+      
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      
+      // Рассчитываем плотную сетку по всему экрану с органичным смещением (джиттером)
+      const cellSize = Math.max(50, Math.min(vw, vh) / 9);
+      const cols = Math.ceil(vw / cellSize) + 1;
+      const rows = Math.ceil(vh / cellSize) + 1;
 
-      // Сетка
-      ctx.strokeStyle = '#334155';
-      ctx.lineWidth = 1;
-      const step = 25;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const jitterX = (Math.random() - 0.5) * cellSize * 0.85;
+          const jitterY = (Math.random() - 0.5) * cellSize * 0.85;
+          const x = c * cellSize + jitterX - 15;
+          const y = r * cellSize + jitterY - 15;
 
-      for (let x = 0; x <= width; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
+          const heartSize = Math.floor(Math.random() * 26) + 20; // 20px – 46px
+          const el = document.createElement('div');
+          el.className = 'mini-heart pulsing';
+          
+          el.style.width = heartSize + 'px';
+          el.style.height = heartSize + 'px';
+          el.style.left = x + 'px';
+          el.style.top = y + 'px';
+          
+          // Параметры индивидуального покачивания шариков при взлёте
+          const dur = (4.5 + Math.random() * 2.2).toFixed(2) + 's';
+          const delay = (Math.random() * 0.9).toFixed(2) + 's';
+          const sway1 = (Math.random() * 36 - 18).toFixed(1) + 'px';
+          const sway2 = (Math.random() * 40 - 20).toFixed(1) + 'px';
+          const sway3 = (Math.random() * 32 - 16).toFixed(1) + 'px';
+          const tilt1 = (Math.random() * 12 - 6).toFixed(1) + 'deg';
+          const tilt2 = (Math.random() * 14 - 7).toFixed(1) + 'deg';
+
+          el.style.setProperty('--float-dur', dur);
+          el.style.animationDelay = delay;
+          el.style.setProperty('--sway-x1', sway1);
+          el.style.setProperty('--sway-x2', sway2);
+          el.style.setProperty('--sway-x3', sway3);
+          el.style.setProperty('--tilt-1', tilt1);
+          el.style.setProperty('--tilt-2', tilt2);
+          el.style.setProperty('--init-scale', '1');
+          el.style.setProperty('--init-opacity', (0.8 + Math.random() * 0.2).toFixed(2));
+
+          el.innerHTML = `
+            <svg viewBox="0 0 32 29.6">
+              <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,16,21.2,16,21.2s16-11.8,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+            </svg>
+          `;
+
+          miniContainer.appendChild(el);
+
+          // Плавное заполнение экрана каскадом
+          setTimeout(() => {
+            el.classList.add('show');
+          }, Math.random() * 450);
+        }
       }
-      for (let y = 0; y <= height; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-
-      // Главные оси X и Y
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 2;
-
-      ctx.beginPath();
-      ctx.moveTo(0, centerY);
-      ctx.lineTo(width, centerY);
-      ctx.moveTo(centerX, 0);
-      ctx.lineTo(centerX, height);
-      ctx.stroke();
     }
 
-    drawGrid();
-
-    // Анимированное построение линии
-    btn.addEventListener('click', () => {
-      btn.disabled = true; // Скрываем кнопку
+    // Запуск анимации сюрприза
+    function startSurprise() {
+      startBtn.classList.add('hidden');
+      replayBtn.classList.add('hidden');
+      
+      ctx.clearRect(0, 0, size, size);
+      heartText.classList.remove('visible');
+      heartWrapper.className = 'heart-wrapper';
+      miniContainer.innerHTML = '';
 
       let t = 0;
       const tMax = Math.PI * 2;
-      const step = 0.04;
+      const step = 0.035;
 
-      const firstPoint = getHeartPoint(0);
-      let lastX = firstPoint.px;
-      let lastY = firstPoint.py;
+      const start = getHeartPoint(0);
+      let prevX = start.x;
+      let prevY = start.y;
 
       ctx.strokeStyle = '#fb7185';
-      ctx.lineWidth = 3.5;
-      ctx.shadowColor = '#f43f5e';
-      ctx.shadowBlur = 10;
+      ctx.lineWidth = Math.max(3.5, size * 0.01);
       ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = '#f43f5e';
+      ctx.shadowBlur = 18;
 
-      function animate() {
+      function draw() {
         t += step;
         const pt = getHeartPoint(t);
 
         ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pt.px, pt.py);
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(pt.x, pt.y);
         ctx.stroke();
 
-        lastX = pt.px;
-        lastY = pt.py;
+        prevX = pt.x;
+        prevY = pt.y;
 
         if (t <= tMax + step) {
-          requestAnimationFrame(animate);
+          animId = requestAnimationFrame(draw);
         } else {
-          // Завершаем контур и запускаем пульсацию
-          canvas.classList.add('pulsing');
+          // Главное сердце замкнуто -> включаем пульс
+          heartWrapper.classList.add('pulsing');
+
+          // Шаг 1: Через 3 секунды появляется надпись «от Никиты»
+          registerTimeout(() => {
+            heartText.classList.add('visible');
+
+            // Шаг 2: Через 3 секунды после надписи экран плотно заполняется сердечками
+            registerTimeout(() => {
+              spawnMiniHearts();
+
+              // Шаг 3: Через 5 секунд сердечки плавно взлетают, как воздушные шарики
+              registerTimeout(() => {
+                // Главное сердце с надписью тоже плавно улетает в небо
+                heartWrapper.style.setProperty('--float-dur', '5.8s');
+                heartWrapper.style.setProperty('--sway-x1', '22px');
+                heartWrapper.style.setProperty('--sway-x2', '-26px');
+                heartWrapper.style.setProperty('--sway-x3', '18px');
+                heartWrapper.style.setProperty('--tilt-1', '5deg');
+                heartWrapper.style.setProperty('--tilt-2', '-4deg');
+                heartWrapper.style.setProperty('--init-scale', '1');
+                heartWrapper.style.setProperty('--init-opacity', '1');
+                heartWrapper.classList.add('balloon-rise');
+
+                // Все маленькие сердечки отрываются и взлетают с индивидуальным покачиванием
+                const miniHearts = miniContainer.querySelectorAll('.mini-heart');
+                miniHearts.forEach(h => {
+                  h.classList.remove('pulsing');
+                  h.classList.add('balloon-rise');
+                });
+
+                // Шаг 4: Когда все улетели, экран пустой — плавно проявляется кнопка «Ещё раз?»
+                registerTimeout(() => {
+                  miniContainer.innerHTML = '';
+                  ctx.clearRect(0, 0, size, size);
+                  heartWrapper.className = 'heart-wrapper';
+                  heartText.classList.remove('visible');
+
+                  replayBtn.classList.remove('hidden');
+                }, 5400);
+
+              }, 5000);
+
+            }, 3000);
+
+          }, 3000);
         }
       }
 
-      animate();
+      registerTimeout(draw, 250);
+    }
+
+    // Сброс и повтор
+    replayBtn.addEventListener('click', () => {
+      clearAllTimeouts();
+      replayBtn.classList.add('hidden');
+      startBtn.classList.remove('hidden');
     });
+
+    startBtn.addEventListener('click', () => {
+      startSurprise();
+    });
+
+    window.addEventListener('resize', () => {
+      if (!startBtn.classList.contains('hidden') || !replayBtn.classList.contains('hidden')) {
+        resize();
+      }
+    });
+
+    resize();
   </script>
 </body>
 </html>
